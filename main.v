@@ -56,9 +56,16 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
     } state_t;
 
     state_t state, next_state;
-    reg [1:0] timer;
+    reg [2:0] timer;
 
-    always @(posedge clk or posedge rst) begin
+    
+
+  // Управляющий автомат.
+  // (*) Здесь следует написать схему, основная часть которой - это
+  //   типовая реализация управляющего символьного автомата,
+  //   заставляющая схему main выполняться согласно условию.
+
+  always @(posedge clk or posedge rst) begin
         if (!rst_n)
             state <= OFF_STATE;
         else
@@ -269,9 +276,4 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
 
       endcase 
     end
-
-  // Управляющий автомат.
-  // (*) Здесь следует написать схему, основная часть которой - это
-  //   типовая реализация управляющего символьного автомата,
-  //   заставляющая схему main выполняться согласно условию.
 endmodule
