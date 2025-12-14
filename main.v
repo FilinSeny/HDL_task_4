@@ -51,12 +51,14 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
         COUNT_2 =       6,
         ENUM_INACTIVE = 7,
         ENUM_ACTIVE_6 = 8,
+        ENUM_ACTIVE_6_S0 = 11,
         ENUM_ACTIVE_2 = 9,
         ENUM_ACTIVE_0 = 10;
 
 
+
     reg [3:0] state, next_state;
-    reg [2:0] timer;
+    reg [2:0] timer = 0, next_timer = 0;
 
     
 
@@ -66,28 +68,47 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
   //   заставляющая схему main выполняться согласно условию.
 
   always @(posedge clk or posedge rst) begin
-        if (!rst)
+        if (rst) begin
             state <= OFF_STATE;
+            timer <= 0;
+            next_timer <= 0;
+        end
         else
-          if (timer == 0) 
+          if (timer == 0) begin
             state <= next_state;
-        	else 
+            timer <= next_timer;
+          end else begin
             timer <= timer - 1;
+          end
+
     end
 
-    always @(on) begin
+    always @(on or start) begin
+
         if (state == OFF_STATE) begin
           case (on)
             2'd1: begin
-              state <= ENUM_ACTIVE_0;
-
+              if (!start)
+                state <= ENUM_INACTIVE;
+              else begin
+                state <= ENUM_ACTIVE_6_S0;
+              end
+              
             end
             2'd2: begin
-              state <= COUNT_0;
+              if (start && x > 0) 
+                state <= COUNT_1;
+              if (start && x == 0)
+                state <= COUNT_2;
+              if (!start)
+                state <= OFF_STATE;
+              
+              
             end
 
             2'd3: begin
               state <= UPD_0;
+              next_state <= UPD_0;
             end
           endcase
         end
@@ -95,6 +116,7 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
 
     always @* begin
       next_state = state;
+      next_timer = 0;
       case(state)
         UPD_0: 
           next_state = UPD_1;
@@ -123,19 +145,23 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
             next_state = OFF_STATE;
 
         ENUM_INACTIVE:
-          if (start)
+          if (!start)
             next_state = ENUM_INACTIVE;
-          else 
+          else begin
             next_state = ENUM_ACTIVE_6;
+            next_timer = 1;
+          end
+        ENUM_ACTIVE_6_S0:
+          next_state = ENUM_ACTIVE_6;
 
         ENUM_ACTIVE_6: begin
           next_state = ENUM_ACTIVE_2;
-          timer = 1;
+          next_timer = 3;
         end
 
         ENUM_ACTIVE_2: begin
           next_state = ENUM_ACTIVE_0;
-          timer = 2;
+          
         end
 
         ENUM_ACTIVE_0:
@@ -149,6 +175,13 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
         OFF_STATE: begin
           active <= 0;
           regime <= 0;
+          y_upd <=        0;
+          y_select_next <= 0;
+          y_en <=         0;
+          s_zero <=       0;
+          s_sub <=        0;
+          s_step <=       0;
+          s_en <=         0;
         end
 
         UPD_0: begin
@@ -236,7 +269,7 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
           s_en <=         0;
         end
 
-        ENUM_ACTIVE_6: begin
+        ENUM_ACTIVE_6, ENUM_ACTIVE_6_S0: begin
           active <=       1;
           regime <=       1;
           y_upd <=        0;
@@ -247,6 +280,7 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
           s_step <=       2;
           s_en <=         1;
         end
+        
 
         ENUM_ACTIVE_2: begin
           active <=       1;
