@@ -14,8 +14,8 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
   input clk, rst;
   
   // (*) По необходимости можно заменить wire на reg для любых точек далее.
-  wire [1:0] y_select_next, s_step;
-  wire y_en, s_en, y_upd, s_sub, s_zero;
+  reg [1:0] y_select_next, s_step;
+  reg y_en, s_en, y_upd, s_sub, s_zero;
   
   // Основная часть операционного автомата.
   datapath _datapath(
@@ -41,7 +41,7 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
   //   и реализовать задающие их подсхемы
   //   (преобразующие данные в управление).
   
-   typedef enum reg [3:0] {
+   localparam
         OFF_STATE =     0,
         UPD_0 =         1,
         UPD_1 =         2,
@@ -52,10 +52,10 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
         ENUM_INACTIVE = 7,
         ENUM_ACTIVE_6 = 8,
         ENUM_ACTIVE_2 = 9,
-        ENUM_ACTIVE_0 = 10
-    } state_t;
+        ENUM_ACTIVE_0 = 10;
 
-    state_t state, next_state;
+
+    reg [3:0] state, next_state;
     reg [2:0] timer;
 
     
@@ -66,7 +66,7 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
   //   заставляющая схему main выполняться согласно условию.
 
   always @(posedge clk or posedge rst) begin
-        if (!rst_n)
+        if (!rst)
             state <= OFF_STATE;
         else
           if (timer == 0) 
