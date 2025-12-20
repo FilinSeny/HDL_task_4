@@ -83,31 +83,30 @@ module main(x, on, start, y, s, b, regime, active, clk, rst);
 
     end
 
-    always @(on or start) begin
+    always @* begin
 
         if (state == OFF_STATE) begin
           case (on)
             2'd1: begin
               if (!start)
-                state <= ENUM_INACTIVE;
+                next_state <= ENUM_INACTIVE;
               else begin
-                state <= ENUM_ACTIVE_6_S0;
+                next_state <= ENUM_ACTIVE_6_S0;
               end
               
             end
             2'd2: begin
               if (start && x > 0) 
-                state <= COUNT_1;
+                next_state <= COUNT_1;
               if (start && x == 0)
-                state <= COUNT_2;
+                next_state <= COUNT_2;
               if (!start)
-                state <= OFF_STATE;
+                next_state <= OFF_STATE;
               
               
             end
 
             2'd3: begin
-              state <= UPD_0;
               next_state <= UPD_0;
             end
           endcase
